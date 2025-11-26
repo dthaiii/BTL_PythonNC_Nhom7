@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: tkinter_app
+    environment:
+      - DISPLAY=:99  # Để chạy giao diện Tkinter
+      - MYSQL_HOST=db  # Dùng tên service "db"
+      - MYSQL_PORT=3306  # Sửa lại port để match với MySQL container
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=123456  # Cập nhật mật khẩu
+      - MYSQL_DATABASE=library_management
+    depends_on:
+      - db  # Đảm bảo container MySQL khởi động trước
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix  # Nếu cần X11 forwarding
+    command: xvfb-run python main.py
+    ports:
+      - "8001:8001"  # Nếu bạn có thêm API hoặc service khác
+    networks:
+      - app_network
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456  # Cập nhật mật khẩu
+      MYSQL_DATABASE: library_management
+    ports:
+      - "3308:3306"  # Cổng ánh xạ từ container sang máy chủ (để có thể truy cập từ bên ngoài)
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app_network
+
+volumes:
+  db_data:
+
+networks:
+  app_network:
+    driver: bridge
