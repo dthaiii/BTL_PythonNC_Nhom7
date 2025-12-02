@@ -38,17 +38,17 @@ class BookManagerScreen:
         self.header_font = Font(family="Arial", size=14, weight="bold")
         self.label_font = Font(family="Arial", size=10)
         self.button_font = Font(family="Arial", size=10)
-        self.label_bg_color = "#f7f7f7"
+        self.label_bg_color = "#dcdad5"
 
     def create_input_fields(self):
         # Tạo các input field với label
-        labels = ["Mã Sách", "Tên Sách", "Tác Giả", "Thể Loại", "Ngày Xuất Bản", "Số Lượng", "Tìm Kiếm"]
+        labels = ["Mã Sách:", "Tên Sách:", "Tác Giả:", "Thể Loại:", "Ngày Xuất Bản:", "Số Lượng:", "Tìm Kiếm:"]
         self.entries = {}
 
         for i, label in enumerate(labels):
-            ttk.Label(self.frame_inputs, text=label, background=self.label_bg_color, font=self.label_font).grid(row=i, column=0, padx=10, pady=5)
-            if label == "Ngày Xuất Bản":
-                entry = DateEntry(self.frame_inputs, width=18, background="darkblue", foreground="white", date_pattern='yyyy-mm-dd')
+            ttk.Label(self.frame_inputs, text=label, background=self.label_bg_color, font=self.label_font).grid(row=i, column=0, padx=10, pady=5, sticky="w")
+            if label == "Ngày Xuất Bản:":
+                entry = DateEntry(self.frame_inputs, width=18, background="#dcdad5", foreground="white", date_pattern='yyyy-mm-dd')
             else:
                 entry = ttk.Entry(self.frame_inputs)
             entry.grid(row=i, column=1, padx=10, pady=5)
@@ -95,10 +95,10 @@ class BookManagerScreen:
         values = self.tree.item(selected_item, 'values')
         if values:
             for i, key in enumerate(self.entries.keys()):
-                if key == "Tìm Kiếm":  # Bỏ qua ô Tìm Kiếm
+                if key == "Tìm Kiếm:":  # Bỏ qua ô Tìm Kiếm
                     continue
                 self.entries[key].delete(0, "end")
-                if key == "Ngày Xuất Bản":
+                if key == "Ngày Xuất Bản:":
                     self.entries[key].set_date(values[i])
                 else:
                     self.entries[key].insert(0, values[i])
@@ -106,15 +106,15 @@ class BookManagerScreen:
     def them_sach(self):
         try:
             # Lấy dữ liệu từ giao diện
-            ma_sach = int(self.entries["Mã Sách"].get())
-            ten_sach = self.entries["Tên Sách"].get()
-            tac_gia = self.entries["Tác Giả"].get()
-            the_loai = self.entries["Thể Loại"].get()
-            ngay_xuat_ban = self.entries["Ngày Xuất Bản"].get_date()
-            so_luong = int(self.entries["Số Lượng"].get())
+            ma_sach = int(self.entries["Mã Sách:"].get())
+            ten_sach = self.entries["Tên Sách:"].get()
+            tac_gia = self.entries["Tác Giả:"].get()
+            the_loai = self.entries["Thể Loại:"].get()
+            ngay_xuat_ban = self.entries["Ngày Xuất Bản:"].get_date()
+            so_luong = int(self.entries["Số Lượng:"].get())
 
             if not ten_sach:
-                raise ValueError("Tên sách không được để trống.")
+                raise ValueError("Tên sách không được để trống!")
             
             # Thêm sách vào cơ sở dữ liệu
             self.cursor.execute("INSERT INTO Sach (ma_sach, ten_sach, tac_gia, the_loai, ngay_xuat_ban, so_luong) VALUES (%s, %s, %s, %s, %s, %s)",
@@ -123,18 +123,18 @@ class BookManagerScreen:
             self.load_sach()
             messagebox.showinfo("Thành công", "Thêm sách thành công.")
         except mysql.connector.IntegrityError:
-            messagebox.showerror("Lỗi", "Mã sách đã tồn tại.")
+            messagebox.showerror("Lỗi", "Mã sách đã tồn tại!")
 
     def sua_sach(self):
-        ma_sach = int(self.entries["Mã Sách"].get())
-        ten_sach = self.entries["Tên Sách"].get()
-        tac_gia = self.entries["Tác Giả"].get()
-        the_loai = self.entries["Thể Loại"].get()
-        ngay_xuat_ban = self.entries["Ngày Xuất Bản"].get_date()
-        so_luong = int(self.entries["Số Lượng"].get())
+        ma_sach = int(self.entries["Mã Sách:"].get())
+        ten_sach = self.entries["Tên Sách:"].get()
+        tac_gia = self.entries["Tác Giả:"].get()
+        the_loai = self.entries["Thể Loại:"].get()
+        ngay_xuat_ban = self.entries["Ngày Xuất Bản:"].get_date()
+        so_luong = int(self.entries["Số Lượng:"].get())
 
         if not ten_sach:
-            raise ValueError("Tên sách không được để trống.")
+            raise ValueError("Tên sách không được để trống!")
 
         self.cursor.execute("UPDATE Sach SET ten_sach = %s, tac_gia = %s, the_loai = %s, ngay_xuat_ban = %s, so_luong = %s WHERE ma_sach = %s",
                            (ten_sach, tac_gia, the_loai, ngay_xuat_ban, so_luong, ma_sach))
@@ -142,15 +142,24 @@ class BookManagerScreen:
         self.load_sach()
         messagebox.showinfo("Thành công", "Sửa sách thành công.")
 
-    def xoa_sach(self): # xóa sách theo mã
-        ma_sach = int(self.entries["Mã Sách"].get())
+    def xoa_sach(self):  # xóa sách theo mã
+        ma_sach = int(self.entries["Mã Sách:"].get())
+        answer = messagebox.askyesno("Xác nhận", f"Bạn có chắc chắn muốn xóa sách với mã {ma_sach}?")
+        if not answer:
+            return
         self.cursor.execute("DELETE FROM Sach WHERE ma_sach = %s", (ma_sach,))
         self.conn.commit()
         self.load_sach()
+        # Xóa dữ liệu trên các entry
+        for key, entry in self.entries.items():
+            if key == "Ngày Xuất Bản:":
+                entry.set_date("")
+            else:
+                entry.delete(0, "end")
         messagebox.showinfo("Thành công", "Xóa sách thành công.")
 
     def tim_kiem(self):
-        keyword = self.entries["Tìm Kiếm"].get()
+        keyword = self.entries["Tìm Kiếm:"].get()
         self.cursor.execute("SELECT * FROM Sach WHERE ten_sach LIKE %s OR the_loai LIKE %s",
                             (f"%{keyword}%", f"%{keyword}%"))
         rows = self.cursor.fetchall()

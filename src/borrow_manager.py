@@ -37,15 +37,15 @@ class BorrowManagerScreen:
         self.header_font = Font(family="Arial", size=14, weight="bold")
         self.label_font = Font(family="Arial", size=10)
         self.button_font = Font(family="Arial", size=10)
-        self.label_bg_color = "#f7f7f7"
+        self.label_bg_color = "#dcdad5"
     def create_input_fields(self):
         # Tạo các input field với label
-        labels = ["Mã mượn trả","Mã Sách", "Mã đọc giả", "Ngày mượn","Ngày trả","Ngày trả dự kiến", "Trạng thái", "Tìm Kiếm"]
+        labels = ["Mã mượn trả:","Mã sách:", "Mã đọc giả:", "Ngày mượn:","Ngày trả:","Ngày trả dự kiến:", "Trạng thái:", "Tìm kiếm:"]
         self.entries = {}
 
         for i, label in enumerate(labels):
-            ttk.Label(self.frame_inputs, text=label, background=self.label_bg_color, font=self.label_font).grid(row=i, column=0, padx=10, pady=5)
-            if label in ["Ngày mượn", "Ngày trả", "Ngày trả dự kiến"]:
+            ttk.Label(self.frame_inputs, text=label, background=self.label_bg_color, font=self.label_font).grid(row=i, column=0, padx=10, pady=5, sticky="w")
+            if label in ["Ngày mượn:", "Ngày trả:", "Ngày trả dự kiến:"]:
                 entry = DateEntry(self.frame_inputs, width=18, background="darkblue", foreground="white", date_pattern='yyyy-mm-dd')
             else:
                 entry = ttk.Entry(self.frame_inputs)
@@ -77,7 +77,16 @@ class BorrowManagerScreen:
         # Hàm tải danh sách sách lên Treeview
         self.cursor.execute("SELECT * FROM Muon_tra")
         rows = self.cursor.fetchall()
-        self.update_treeview(rows)
+        # Chuyển trạng thái 0/1 thành "Chưa trả"/"Đã trả"
+        converted_rows = []
+        for row in rows:
+            row = list(row)
+            if row[-1] == 0:
+                row[-1] = "Chưa trả"
+            elif row[-1] == 1:
+                row[-1] = "Đã trả"
+            converted_rows.append(row)
+        self.update_treeview(converted_rows)
 
     def update_treeview(self, rows):
         # Cập nhật Treeview
@@ -90,10 +99,10 @@ class BorrowManagerScreen:
         values = self.tree.item(selected_item, 'values')
         if values:
             for i, key in enumerate(self.entries.keys()):
-                if key == "Tìm Kiếm":  # Bỏ qua ô Tìm Kiếm
+                if key == "Tìm kiếm:":  # Bỏ qua ô Tìm Kiếm
                     continue
                 self.entries[key].delete(0, "end")
-                if key in ["Ngày mượn", "Ngày trả", "Ngày trả dự kiến"]:
+                if key in ["Ngày mượn:", "Ngày trả:", "Ngày trả dự kiến:"]:
                     self.entries[key].set_date(values[i])
                 else:
                     self.entries[key].insert(0, values[i])
@@ -101,48 +110,48 @@ class BorrowManagerScreen:
     def them_muon_tra(self):
         try:
             # Lấy dữ liệu từ giao diện
-            ma_muon_tra = int(self.entries["Mã mượn trả"].get())  # Mã sách
-            ma_sach = int(self.entries["Mã Sách"].get())  # Mã sách
-            ma_doc_gia = int(self.entries["Mã đọc giả"].get())  # Mã độc giả
-            ngay_muon = self.entries["Ngày mượn"].get_date()  # Ngày mượn
-            ngay_tra = self.entries["Ngày trả"].get_date()  # Ngày mượn
-            ngay_tra_du_kien = self.entries["Ngày trả dự kiến"].get_date()  # Ngày trả dự kiến
-            trang_thai = 0  # Trạng thái mặc định là 0 (chưa trả)
+            ma_muon_tra = int(self.entries["Mã mượn trả:"].get())
+            ma_sach = int(self.entries["Mã sách:"].get())
+            ma_doc_gia = int(self.entries["Mã đọc giả:"].get())
+            ngay_muon = self.entries["Ngày mượn:"].get_date()
+            ngay_tra = self.entries["Ngày trả:"].get()  # Có thể rỗng nếu chưa trả
+            ngay_tra = self.entries["Ngày trả:"].get_date() if ngay_tra else None
+            ngay_tra_du_kien = self.entries["Ngày trả dự kiến:"].get_date()
+            # Lấy trạng thái từ ô nhập, mặc định là 0 nếu rỗng
+            trang_thai_str = self.entries["Trạng thái:"].get()
+            trang_thai = int(trang_thai_str) if trang_thai_str in ["0", "1"] else 0
 
             # Kiểm tra dữ liệu bắt buộc
             if not ma_sach or not ma_doc_gia or not ngay_muon or not ngay_tra_du_kien:
-                raise ValueError("Vui lòng nhập đầy đủ thông tin mượn sách.")
-            
+                raise ValueError("Vui lòng nhập đầy đủ thông tin mượn sách!")
+
             # Thêm thông tin mượn/trả vào bảng Muon_tra
             self.cursor.execute("""
                 INSERT INTO Muon_tra (ma_muon_tra, ma_sach, ma_doc_gia, ngay_muon, ngay_tra, ngay_tra_du_kien, trang_thai)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (ma_muon_tra, ma_sach, ma_doc_gia, ngay_muon, ngay_tra, ngay_tra_du_kien, trang_thai))
-            
-            # Commit thay đổi vào cơ sở dữ liệu
+
             self.conn.commit()
-            
-            # Refresh dữ liệu trên giao diện (giả sử bạn có hàm load_muon_tra)
             self.load_muon_tra()
-            
-            # Thông báo thành công
             messagebox.showinfo("Thành công", "Thêm thông tin mượn sách thành công.")
         except mysql.connector.IntegrityError:
-            messagebox.showerror("Lỗi", "Sai mã đọc giả hoặc mã sách")
+            messagebox.showerror("Lỗi!", "Sai mã đọc giả hoặc mã sách!")
+        except Exception as e:
+            messagebox.showerror("Lỗi!", str(e))
         
 
     def sua_muon_tra(self):
-        ma_muon_tra = int(self.entries["Mã mượn trả"].get())  # Mã mượn trả
-        ma_sach = int(self.entries["Mã Sách"].get())  # Mã sách
-        ma_doc_gia = int(self.entries["Mã đọc giả"].get())  # Mã độc giả
-        ngay_muon = self.entries["Ngày mượn"].get_date()  # Ngày mượn
-        ngay_tra = self.entries["Ngày trả"].get_date() if self.entries["Ngày trả"].get() else None  # Ngày trả
-        ngay_tra_du_kien = self.entries["Ngày trả dự kiến"].get_date()  # Ngày trả dự kiến
-        trang_thai = int(self.entries["Trạng thái"].get())  # Trạng thái: 0 - chưa trả, 1 - đã trả
+        ma_muon_tra = int(self.entries["Mã mượn trả:"].get())  # Mã mượn trả
+        ma_sach = int(self.entries["Mã sách:"].get())  # Mã sách
+        ma_doc_gia = int(self.entries["Mã đọc giả:"].get())  # Mã độc giả
+        ngay_muon = self.entries["Ngày mượn:"].get_date()  # Ngày mượn
+        ngay_tra = self.entries["Ngày trả:"].get_date() if self.entries["Ngày trả:"].get() else None  # Ngày trả
+        ngay_tra_du_kien = self.entries["Ngày trả dự kiến:"].get_date()  # Ngày trả dự kiến
+        trang_thai = int(self.entries["Trạng thái:"].get())  # Trạng thái: 0 - chưa trả, 1 - đã trả
 
         # Kiểm tra dữ liệu bắt buộc
         if not ma_sach or not ma_doc_gia or not ngay_muon or not ngay_tra_du_kien:
-            raise ValueError("Vui lòng nhập đầy đủ thông tin cần sửa.")
+            raise ValueError("Vui lòng nhập đầy đủ thông tin cần sửa!")
 
 
         self.cursor.execute("UPDATE Muon_tra  SET  ma_sach = %s, ma_doc_gia = %s, ngay_muon = %s, ngay_tra = %s , ngay_tra_du_kien=%s, trang_thai=%s WHERE ma_muon_tra = %s",
@@ -152,14 +161,16 @@ class BorrowManagerScreen:
         messagebox.showinfo("Thành công", "Cập nhật thông tin mượn/trả thành công.")
         
     def xoa_muon_tra(self):
-        ma_muon_tra = int(self.entries["Mã mượn trả"].get())
-        self.cursor.execute("DELETE FROM Muon_tra WHERE ma_muon_tra = %s", (ma_muon_tra,))
-        self.conn.commit()
-        self.load_muon_tra()
-        messagebox.showinfo("Thành công", "Xóa đơn mượn trả thành công.")
+        ma_muon_tra = int(self.entries["Mã mượn trả:"].get())
+        confirm = messagebox.askyesno("Xác nhận", "Bạn có chắc chắn muốn xóa đơn mượn trả này không?")
+        if confirm:
+            self.cursor.execute("DELETE FROM Muon_tra WHERE ma_muon_tra = %s", (ma_muon_tra,))
+            self.conn.commit()
+            self.load_muon_tra()
+            messagebox.showinfo("Thành công", "Xóa đơn mượn trả thành công.")
         
     def tim_kiem(self):
-        keyword = self.entries["Tìm Kiếm"].get()
+        keyword = self.entries["Tìm kiếm:"].get()
         # Truy vấn tìm kiếm với JOIN giữa Muon_tra và Doc_gia
         query = """
             SELECT 

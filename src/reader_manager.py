@@ -39,16 +39,16 @@ class ReaderManagerScreen:
         self.header_font = Font(family="Arial", size=14, weight="bold")
         self.label_font = Font(family="Arial", size=10)
         self.button_font = Font(family="Arial", size=10)
-        self.label_bg_color = "#f7f7f7"
+        self.label_bg_color = "#dcdad5"
 
     def create_input_fields(self):
         # Tạo các input field với label
-        labels = ["Mã đọc giả", "Tên đọc giả", "Ngày sinh", "Email", "Số điện thoại", "Tìm Kiếm"]
+        labels = ["Mã đọc giả:", "Tên đọc giả:", "Ngày sinh:", "Email:", "Số điện thoại:", "Tìm kiếm"]
         self.entries = {}
 
         for i, label in enumerate(labels):
-            ttk.Label(self.frame_inputs, text=label, background=self.label_bg_color, font=self.label_font).grid(row=i, column=0, padx=10, pady=5)
-            if label == "Ngày sinh":
+            ttk.Label(self.frame_inputs, text=label, background=self.label_bg_color, font=self.label_font).grid(row=i, column=0, padx=10, pady=5, sticky="w")
+            if label == "Ngày sinh:":
                 entry = DateEntry(self.frame_inputs, width=18, background="darkblue", foreground="white", date_pattern='yyyy-mm-dd')
             else:
                 entry = ttk.Entry(self.frame_inputs)
@@ -96,23 +96,22 @@ class ReaderManagerScreen:
         values = self.tree.item(selected_item, 'values')
         if values:
             for i, key in enumerate(self.entries.keys()):
-                if key == "Tìm Kiếm":  # Bỏ qua ô Tìm Kiếm
+                if key == "Tìm kiếm":  # Bỏ qua ô Tìm Kiếm
                     continue
                 self.entries[key].delete(0, "end")
-                if key == "Ngày sinh":
-                    self.entries[key].set_date(values[i])
+                if key == "Ngày sinh:":
+                    self.entries[key].set_date(values[i],)
                 else:
                     self.entries[key].insert(0, values[i])
 
     def them_doc_gia(self):
         try:
             # Lấy dữ liệu từ giao diện
-            ma_doc_gia = int(self.entries["Mã đọc giả"].get())
-            ten_doc_gia = self.entries["Tên đọc giả"].get()
-            ngay_sinh = self.entries["Ngày sinh"].get_date()
-            email = self.entries["Email"].get()
-            sdt = self.entries["Số điện thoại"].get()
-
+            ma_doc_gia = int(self.entries["Mã đọc giả:"].get())
+            ten_doc_gia = self.entries["Tên đọc giả:"].get()
+            ngay_sinh = self.entries["Ngày sinh:"].get_date()
+            email = self.entries["Email:"].get()
+            sdt = self.entries["Số điện thoại:"].get()
             if not ten_doc_gia:
                 raise ValueError("Tên đọc giả không được để trống.")
             
@@ -126,30 +125,51 @@ class ReaderManagerScreen:
             messagebox.showerror("Lỗi", "Mã đọc giả đã tồn tại.")
 
     def sua_doc_gia(self):
-        ma_doc_gia = int(self.entries["Mã đọc giả"].get())
-        ten_doc_gia = self.entries["Tên đọc giả"].get()
-        ngay_sinh = self.entries["Ngày sinh"].get_date()
-        email = self.entries["Email"].get()
-        sdt = self.entries["Số điện thoại"].get()
+        try:
+            selected_item = self.tree.focus()
+            old_values = self.tree.item(selected_item, 'values')
+            if not old_values:
+                messagebox.showerror("Lỗi", "Vui lòng chọn đọc giả cần sửa.")
+                return
 
-        if not ten_doc_gia:
-            raise ValueError("Tên đọc giả không được để trống.")
+            old_ma_doc_gia = int(old_values[0])
+            new_ma_doc_gia = int(self.entries["Mã đọc giả:"].get())
+            ten_doc_gia = self.entries["Tên đọc giả:"].get()
+            ngay_sinh = self.entries["Ngày sinh:"].get_date()
+            email = self.entries["Email:"].get()
+            sdt = self.entries["Số điện thoại:"].get()
+            if not ten_doc_gia:
+                raise ValueError("Tên đọc giả không được để trống.")
 
-        self.cursor.execute("UPDATE Doc_gia SET ten_doc_gia = %s, ngay_sinh = %s, email = %s, sdt = %s WHERE ma_doc_gia = %s",
-                           (ten_doc_gia, ngay_sinh, email, sdt, ma_doc_gia))
-        self.conn.commit()
-        self.load_doc_gia()
-        messagebox.showinfo("Thành công", "Sửa đọc giả thành công.")
+            # Nếu mã đọc giả thay đổi, kiểm tra trùng lặp
+            if new_ma_doc_gia != old_ma_doc_gia:
+                self.cursor.execute("SELECT COUNT(*) FROM doc_gia WHERE ma_doc_gia = %s", (new_ma_doc_gia,))
+                if self.cursor.fetchone()[0] > 0:
+                    messagebox.showerror("Lỗi", "Mã đọc giả mới đã tồn tại.")
+                    return
+
+            # Cập nhật thông tin đọc giả, bao gồm cả mã đọc giả
+            self.cursor.execute(
+                "UPDATE doc_gia SET ma_doc_gia = %s, ten_doc_gia = %s, ngay_sinh = %s, email = %s, sdt = %s WHERE ma_doc_gia = %s",
+                (new_ma_doc_gia, ten_doc_gia, ngay_sinh, email, sdt, old_ma_doc_gia)
+            )
+            self.conn.commit()
+            self.load_doc_gia()
+            messagebox.showinfo("Thành công", "Sửa đọc giả thành công.")
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Sửa đọc giả thất bại: {e}")
 
     def xoa_doc_gia(self):
-        ma_doc_gia = int(self.entries["Mã đọc giả"].get())
-        self.cursor.execute("DELETE FROM Doc_gia WHERE ma_doc_gia = %s", (ma_doc_gia,))
-        self.conn.commit()
-        self.load_doc_gia()
-        messagebox.showinfo("Thành công", "Xóa đọc giả thành công.")
+        ma_doc_gia = int(self.entries["Mã đọc giả:"].get())
+        confirm = messagebox.askyesno("Xác nhận", f"Bạn có chắc chắn muốn xóa đọc giả có mã {ma_doc_gia}?")
+        if confirm:
+            self.cursor.execute("DELETE FROM Doc_gia WHERE ma_doc_gia = %s", (ma_doc_gia,))
+            self.conn.commit()
+            self.load_doc_gia()
+            messagebox.showinfo("Thành công", "Xóa đọc giả thành công.")
 
     def tim_kiem(self):
-        keyword = self.entries["Tìm Kiếm"].get()
+        keyword = self.entries["Tìm kiếm"].get()
         self.cursor.execute("SELECT * FROM Doc_gia WHERE ten_doc_gia LIKE %s OR email LIKE %s",
                             (f"%{keyword}%", f"%{keyword}%"))
         rows = self.cursor.fetchall()
