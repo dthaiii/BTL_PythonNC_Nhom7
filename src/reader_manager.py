@@ -107,13 +107,14 @@ class ReaderManagerScreen:
     def them_doc_gia(self):
         try:
             # Lấy dữ liệu từ giao diện
-            ma_doc_gia = int(self.entries["Mã đọc giả:"].get())
+            ma_doc_gia = (self.entries["Mã đọc giả:"].get())
             ten_doc_gia = self.entries["Tên đọc giả:"].get()
             ngay_sinh = self.entries["Ngày sinh:"].get_date()
             email = self.entries["Email:"].get()
             sdt = self.entries["Số điện thoại:"].get()
-            if not ten_doc_gia:
-                raise ValueError("Tên đọc giả không được để trống.")
+            if not ten_doc_gia or not ma_doc_gia or not ngay_sinh or not email or not sdt:
+                messagebox.showerror("Lỗi", "Các trường dữ liệu không được để trống.")
+                return
             
             # Thêm đọc giả vào cơ sở dữ liệu
             self.cursor.execute("INSERT INTO doc_gia (ma_doc_gia, ten_doc_gia, ngay_sinh, email, sdt) VALUES (%s, %s, %s, %s, %s)",
@@ -138,8 +139,9 @@ class ReaderManagerScreen:
             ngay_sinh = self.entries["Ngày sinh:"].get_date()
             email = self.entries["Email:"].get()
             sdt = self.entries["Số điện thoại:"].get()
-            if not ten_doc_gia:
-                raise ValueError("Tên đọc giả không được để trống.")
+            if not ten_doc_gia or not new_ma_doc_gia or not ngay_sinh or not email or not sdt:
+                messagebox.showerror("Lỗi", "Các trường dữ liệu không được để trống.")
+                return
 
             # Nếu mã đọc giả thay đổi, kiểm tra trùng lặp
             if new_ma_doc_gia != old_ma_doc_gia:

@@ -106,15 +106,16 @@ class BookManagerScreen:
     def them_sach(self):
         try:
             # Lấy dữ liệu từ giao diện
-            ma_sach = int(self.entries["Mã Sách:"].get())
+            ma_sach = (self.entries["Mã Sách:"].get())
             ten_sach = self.entries["Tên Sách:"].get()
             tac_gia = self.entries["Tác Giả:"].get()
             the_loai = self.entries["Thể Loại:"].get()
             ngay_xuat_ban = self.entries["Ngày Xuất Bản:"].get_date()
-            so_luong = int(self.entries["Số Lượng:"].get())
+            so_luong = (self.entries["Số Lượng:"].get())
 
-            if not ten_sach:
-                raise ValueError("Tên sách không được để trống!")
+            if not ten_sach or not ma_sach or not tac_gia or not the_loai or not so_luong or not ngay_xuat_ban:
+                messagebox.showerror("Lỗi!", "Các trường dữ liệu không được để trống!")
+                return
             
             # Thêm sách vào cơ sở dữ liệu
             self.cursor.execute("INSERT INTO Sach (ma_sach, ten_sach, tac_gia, the_loai, ngay_xuat_ban, so_luong) VALUES (%s, %s, %s, %s, %s, %s)",
@@ -126,24 +127,41 @@ class BookManagerScreen:
             messagebox.showerror("Lỗi", "Mã sách đã tồn tại!")
 
     def sua_sach(self):
-        ma_sach = int(self.entries["Mã Sách:"].get())
-        ten_sach = self.entries["Tên Sách:"].get()
-        tac_gia = self.entries["Tác Giả:"].get()
-        the_loai = self.entries["Thể Loại:"].get()
-        ngay_xuat_ban = self.entries["Ngày Xuất Bản:"].get_date()
-        so_luong = int(self.entries["Số Lượng:"].get())
+        try:
+            selected_item = self.tree.focus()
+            old_values = self.tree.item(selected_item, 'values')
+            if not old_values:
+                messagebox.showerror("Lỗi", "Vui lòng chọn sách cần sửa.")
+                return
+            
+            old_ma_sach = int(old_values[0])
+            new_ma_sach = int(self.entries["Mã Sách:"].get())
+            ma_sach = (self.entries["Mã Sách:"].get())
+            ten_sach = self.entries["Tên Sách:"].get()
+            tac_gia = self.entries["Tác Giả:"].get()
+            the_loai = self.entries["Thể Loại:"].get()
+            ngay_xuat_ban = self.entries["Ngày Xuất Bản:"].get_date()
+            so_luong = (self.entries["Số Lượng:"].get())
 
-        if not ten_sach:
-            raise ValueError("Tên sách không được để trống!")
-
-        self.cursor.execute("UPDATE Sach SET ten_sach = %s, tac_gia = %s, the_loai = %s, ngay_xuat_ban = %s, so_luong = %s WHERE ma_sach = %s",
-                           (ten_sach, tac_gia, the_loai, ngay_xuat_ban, so_luong, ma_sach))
-        self.conn.commit()
-        self.load_sach()
-        messagebox.showinfo("Thành công", "Sửa sách thành công.")
+            if not ten_sach or not tac_gia or not the_loai or not so_luong or not ngay_xuat_ban:
+                messagebox.showerror("Lỗi!", "Các trường dữ liệu không được để trống!")
+                return
+            # Nếu mã sách thay đổi, kiểm tra trùng lặp
+            if new_ma_sach != old_ma_sach:
+                self.cursor.execute("SELECT COUNT(*) FROM Sach WHERE ma_sach = %s", (new_ma_sach,))
+                if self.cursor.fetchone()[0] > 0:
+                    messagebox.showerror("Lỗi", "Mã sách đã tồn tại!")
+                    return
+            self.cursor.execute("UPDATE Sach SET ma_sach = %s, ten_sach = %s, tac_gia = %s, the_loai = %s, ngay_xuat_ban = %s, so_luong = %s WHERE ma_sach = %s",
+                            (new_ma_sach, ten_sach, tac_gia, the_loai, ngay_xuat_ban, so_luong, old_ma_sach))
+            self.conn.commit()
+            self.load_sach()
+            messagebox.showinfo("Thành công", "Sửa sách thành công.")
+        except mysql.connector.IntegrityError :
+            messagebox.showerror("Lỗi", f"Mã sách không tồn tại!")
 
     def xoa_sach(self):  # xóa sách theo mã
-        ma_sach = int(self.entries["Mã Sách:"].get())
+        ma_sach = (self.entries["Mã Sách:"].get())
         answer = messagebox.askyesno("Xác nhận", f"Bạn có chắc chắn muốn xóa sách với mã {ma_sach}?")
         if not answer:
             return
@@ -159,8 +177,9 @@ class BookManagerScreen:
         messagebox.showinfo("Thành công", "Xóa sách thành công.")
 
     def tim_kiem(self):
+        # Tìm kiếm sách theo tên hoặc thể loại
         keyword = self.entries["Tìm Kiếm:"].get()
-        self.cursor.execute("SELECT * FROM Sach WHERE ten_sach LIKE %s OR the_loai LIKE %s",
+        self.cursor.execute("SELECT * FROM Sach WHERE ten_sach LIKE %s OR the_loai LIKE %s", 
                             (f"%{keyword}%", f"%{keyword}%"))
         rows = self.cursor.fetchall()
         self.update_treeview(rows)

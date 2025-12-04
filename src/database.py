@@ -34,7 +34,7 @@ def create_tables():
         # Tạo bảng Sách
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Sach (
-                ma_sach INT AUTO_INCREMENT PRIMARY KEY,
+                ma_sach INT PRIMARY KEY,
                 ten_sach VARCHAR(255) NOT NULL,
                 tac_gia VARCHAR(255),
                 the_loai VARCHAR(100),

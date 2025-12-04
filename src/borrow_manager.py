@@ -123,7 +123,8 @@ class BorrowManagerScreen:
 
             # Kiểm tra dữ liệu bắt buộc
             if not ma_sach or not ma_doc_gia or not ngay_muon or not ngay_tra_du_kien:
-                raise ValueError("Vui lòng nhập đầy đủ thông tin mượn sách!")
+                messagebox.showerror("Lỗi!", "Vui lòng nhập đầy đủ thông tin mượn sách!")
+                return
 
             # Thêm thông tin mượn/trả vào bảng Muon_tra
             self.cursor.execute("""

@@ -46,7 +46,7 @@ class LibraryManagementScreen:
         )
         style.configure(
             "Yellow.TButton",
-            background="#FFEB3B",
+            background="#3B69FF",
             foreground="white",
             font=("Arial", 12, "bold"),
             padding=12,
@@ -112,9 +112,9 @@ class LibraryManagementScreen:
         )
         self.reader_management_button.config(style="Blue.TButton")
 
-        # Nút "Quản lý mượn sách"
+        # Nút "Quản lý mượn trả"
         self.borrow_management_button = self.create_button(
-            self.dashboard_frame, "Quản lý mượn sách", self.manage_borrows, 2, 0
+            self.dashboard_frame, "Quản lý mượn trả", self.manage_borrows, 2, 0
         )
         self.borrow_management_button.config(style="Yellow.TButton")
         # Nút "Thống kê"
