@@ -170,6 +170,9 @@ class ReaderManagerScreen:
 
     def tim_kiem(self):
         keyword = self.entries["Tìm kiếm"].get()
+        if not keyword.strip():
+            self.load_doc_gia()
+            return
         self.cursor.execute("SELECT * FROM Doc_gia WHERE ten_doc_gia LIKE %s OR email LIKE %s",
                             (f"%{keyword}%", f"%{keyword}%"))
         rows = self.cursor.fetchall()

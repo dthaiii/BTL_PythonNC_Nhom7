@@ -10,6 +10,8 @@ class LibraryStatisticsScreen:
     def __init__(self, root):
         self.root = root
         self.root.title("Thống kê sách")
+        self.root.geometry("1100x800")
+        self.root.configure(bg="#babfbb")
         self.conn = get_db_connection()
         self.cursor = self.conn.cursor()
         self.setup_ui()
@@ -18,22 +20,23 @@ class LibraryStatisticsScreen:
     def setup_ui(self):
         # Cấu hình grid weight để responsive
         self.root.grid_rowconfigure(0, weight=1)
-        self.root. grid_columnconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+        self.lb_background = "#dcdad5"
         
         # Main frame với scrollbar
-        main_container = ttk.Frame(self. root)
-        main_container. grid(row=0, column=0, sticky="nsew")
+        main_container = ttk.Frame(self.root, style="Main.TFrame")
+        main_container.grid(row=0, column=0, sticky="nsew")
         main_container.grid_rowconfigure(0, weight=1)
         main_container.grid_columnconfigure(0, weight=1)
         
         # Canvas và Scrollbar
-        canvas = tk. Canvas(main_container)
-        scrollbar = ttk. Scrollbar(main_container, orient="vertical", command=canvas. yview)
+        canvas = tk.Canvas(main_container)
+        scrollbar = ttk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
         
         self.frame_statics = ttk.Frame(canvas)
         
         # Cấu hình canvas
-        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.configure(yscrollcommand=scrollbar.set, background=self.lb_background)
         scrollbar.grid(row=0, column=1, sticky="ns")
         canvas.grid(row=0, column=0, sticky="nsew")
         canvas.create_window((0, 0), window=self.frame_statics, anchor="nw")
@@ -53,46 +56,46 @@ class LibraryStatisticsScreen:
         btn_back.grid(row=0, column=0, sticky="W", padx=10, pady=10)
 
         # Tiêu đề
-        tk.Label(self.frame_statics, text="THỐNG KÊ THƯ VIỆN", font=("Arial", 16, "bold")).grid(
+        tk.Label(self.frame_statics, text="THỐNG KÊ THƯ VIỆN", font=("Arial", 16, "bold"), background=self.lb_background).grid(
             row=1, column=0, columnspan=4, pady=(0, 20), sticky="n")
 
         # Labels cho thống kê
-        self.lbl_total_books = tk.Label(self.frame_statics, text="0", font=("Arial", 10))
-        self.lbl_total_readers = tk.Label(self.frame_statics, text="0", font=("Arial", 10))
-        self.lbl_remaining_books = tk.Label(self.frame_statics, text="0", font=("Arial", 10))
-        self.lbl_borrowed_books = tk.Label(self.frame_statics, text="0", font=("Arial", 10))
-        self.lbl_return_rate = tk.Label(self.frame_statics, text="0%", font=("Arial", 10))
-        self.lbl_most_borrowed_book_val = tk.Label(self.frame_statics, text="", font=("Arial", 10))
-        self.lbl_most_active_reader_val = tk.Label(self.frame_statics, text="", font=("Arial", 10))
-        self.lbl_books_not_returned_count = tk.Label(self. frame_statics, text="Số lượng: 0", font=("Arial", 10))
-        self.lbl_books_due_not_returned_count = tk.Label(self.frame_statics, text="Số lượng: 0", font=("Arial", 10))
+        self.lbl_total_books = tk.Label(self.frame_statics, text="0", font=("Arial", 10), background=self.lb_background)
+        self.lbl_total_readers = tk.Label(self.frame_statics, text="0", font=("Arial", 10), background=self.lb_background)
+        self.lbl_remaining_books = tk.Label(self.frame_statics, text="0", font=("Arial", 10), background=self.lb_background)
+        self.lbl_borrowed_books = tk.Label(self.frame_statics, text="0", font=("Arial", 10), background=self.lb_background)
+        self.lbl_return_rate = tk.Label(self.frame_statics, text="0%", font=("Arial", 10), background=self.lb_background)
+        self.lbl_most_borrowed_book_val = tk.Label(self.frame_statics, text="", font=("Arial", 10), background=self.lb_background)
+        self.lbl_most_active_reader_val = tk.Label(self.frame_statics, text="", font=("Arial", 10), background=self.lb_background)
+        self.lbl_books_not_returned_count = tk.Label(self.frame_statics, text="Số lượng: 0", font=("Arial", 10), background=self.lb_background)
+        self.lbl_books_due_not_returned_count = tk.Label(self.frame_statics, text="Số lượng: 0", font=("Arial", 10), background=self.lb_background)
 
         # Các thống kê cơ bản
-        tk.Label(self.frame_statics, text="Tổng số lượng sách:", font=("Arial", 10, "bold")).grid(
+        tk.Label(self.frame_statics, text="Tổng số lượng sách:", font=("Arial", 10, "bold"), background=self.lb_background).grid(
             row=2, column=0, sticky="w", padx=10, pady=5)
-        self.lbl_total_books. grid(row=2, column=1, sticky="w", padx=10)
+        self.lbl_total_books.grid(row=2, column=1, sticky="w", padx=10)
 
-        tk.Label(self.frame_statics, text="Tổng số độc giả:", font=("Arial", 10, "bold")).grid(
+        tk.Label(self.frame_statics, text="Tổng số độc giả:", font=("Arial", 10, "bold"), background=self.lb_background).grid(
             row=2, column=2, sticky="w", padx=10, pady=5)
         self.lbl_total_readers.grid(row=2, column=3, sticky="w", padx=10)
 
-        tk.Label(self. frame_statics, text="Số sách đang được mượn:", font=("Arial", 10, "bold")).grid(
+        tk.Label(self. frame_statics, text="Số sách đang được mượn:", font=("Arial", 10, "bold"), background=self.lb_background).grid(
             row=3, column=0, sticky="w", padx=10, pady=5)
         self.lbl_borrowed_books.grid(row=3, column=1, sticky="w", padx=10)
 
-        tk.Label(self.frame_statics, text="Số sách còn lại trong kho:", font=("Arial", 10, "bold")).grid(
+        tk.Label(self.frame_statics, text="Số sách còn lại trong kho:", font=("Arial", 10, "bold"), background=self.lb_background).grid(
             row=3, column=2, sticky="w", padx=10, pady=5)
         self.lbl_remaining_books.grid(row=3, column=3, sticky="w", padx=10)
 
-        tk. Label(self.frame_statics, text="Tỉ lệ trả sách đúng hạn:", font=("Arial", 10, "bold")).grid(
+        tk. Label(self.frame_statics, text="Tỉ lệ trả sách đúng hạn:", font=("Arial", 10, "bold"), background=self.lb_background).grid(
             row=4, column=0, sticky="w", padx=10, pady=5)
         self.lbl_return_rate.grid(row=4, column=1, sticky="w", padx=10)
 
-        tk.Label(self.frame_statics, text="Sách được mượn nhiều nhất:", font=("Arial", 10, "bold")).grid(
+        tk.Label(self.frame_statics, text="Sách được mượn nhiều nhất:", font=("Arial", 10, "bold"), background=self.lb_background).grid(
             row=5, column=0, sticky="w", padx=10, pady=5)
         self.lbl_most_borrowed_book_val.grid(row=5, column=1, sticky="w", padx=10)
 
-        tk. Label(self.frame_statics, text="Độc giả tích cực nhất:", font=("Arial", 10, "bold")).grid(
+        tk. Label(self.frame_statics, text="Độc giả tích cực nhất:", font=("Arial", 10, "bold"), background=self.lb_background).grid(
             row=5, column=2, sticky="w", padx=10, pady=5)
         self.lbl_most_active_reader_val.grid(row=5, column=3, sticky="w", padx=10)
 
@@ -101,7 +104,7 @@ class LibraryStatisticsScreen:
             row=6, column=0, columnspan=4, sticky="ew", padx=10, pady=15)
 
         # Sách chưa trả
-        tk.Label(self.frame_statics, text="SÁCH CHƯA TRẢ", font=("Arial", 12, "bold")).grid(
+        tk.Label(self.frame_statics, text="SÁCH CHƯA TRẢ", font=("Arial", 12, "bold"), background=self.lb_background).grid(
             row=7, column=0, columnspan=4, sticky="w", padx=10, pady=(10, 5))
         self.lbl_books_not_returned_count.grid(row=8, column=0, columnspan=4, sticky="w", padx=10)
 
@@ -126,7 +129,7 @@ class LibraryStatisticsScreen:
             self.tree_books_not_returned.column(col, anchor="center", width=200)
 
         # Sách đến hẹn chưa trả
-        tk.Label(self.frame_statics, text="SÁCH QUÁ HẠN", font=("Arial", 12, "bold")).grid(
+        tk.Label(self.frame_statics, text="SÁCH QUÁ HẠN", font=("Arial", 12, "bold"), background=self.lb_background).grid(
             row=10, column=0, columnspan=4, sticky="w", padx=10, pady=(10, 5))
         self.lbl_books_due_not_returned_count.grid(row=11, column=0, columnspan=4, sticky="w", padx=10)
 
@@ -150,7 +153,7 @@ class LibraryStatisticsScreen:
             self.tree_books_due_not_returned.column(col, anchor="center", width=200)
 
         # Chi tiết số lượng sách
-        tk.Label(self.frame_statics, text="CHI TIẾT SỐ LƯỢNG SÁCH", font=("Arial", 12, "bold")).grid(
+        tk.Label(self.frame_statics, text="CHI TIẾT SỐ LƯỢNG SÁCH", font=("Arial", 12, "bold"), background=self.lb_background).grid(
             row=13, column=0, columnspan=4, sticky="w", padx=10, pady=(10, 5))
 
         frame_details = ttk.Frame(self. frame_statics)

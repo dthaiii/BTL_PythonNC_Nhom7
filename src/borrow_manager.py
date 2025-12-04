@@ -171,7 +171,11 @@ class BorrowManagerScreen:
         
     def tim_kiem(self):
         keyword = self.entries["Tìm kiếm:"].get()
+        if not keyword.strip():
+            self.load_muon_tra()
+            return
         # Truy vấn tìm kiếm với JOIN giữa Muon_tra và Doc_gia
+        # Tìm kiếm theo tên đọc giả hoặc ngày mượn, 
         query = """
             SELECT 
                 Muon_tra.ma_muon_tra,
@@ -188,7 +192,15 @@ class BorrowManagerScreen:
         """
         self.cursor.execute(query, (f"%{keyword}%", f"%{keyword}%"))
         rows = self.cursor.fetchall()
-        self.update_treeview(rows)
+        converted_rows = []
+        for row in rows:
+            row = list(row)
+            if row[-1] == 0:
+                row[-1] = "Chưa trả"
+            else:
+                row[-1] = "Đã trả"
+            converted_rows.append(row)
+        self.update_treeview(converted_rows)
 
     def tro_ve(self):
         self.frame_borrow_manager.destroy()
