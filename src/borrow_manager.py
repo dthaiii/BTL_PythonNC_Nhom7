@@ -3,8 +3,13 @@ from tkinter import messagebox, ttk
 import mysql.connector
 from tkcalendar import DateEntry
 from tkinter.font import Font
+from datetime import datetime, date
 from database import get_db_connection
 class BorrowManagerScreen:
+    # Column index constants
+    NGAY_TRA_DU_KIEN_COL = 5
+    TRANG_THAI_COL = 6
+    
     def __init__(self, root):
         self.root = root
         self.root.title("Quản lý Mượn")
@@ -81,28 +86,42 @@ class BorrowManagerScreen:
 
         # Liên kết sự kiện chọn dòng
         self.tree.bind('<<TreeviewSelect>>', self.chon_item)
+    
+    def calculate_status(self, trang_thai, ngay_tra_du_kien):
+        """
+        Calculate the display status based on database status and due date.
+        
+        Args:
+            trang_thai: Database status (0 or 1)
+            ngay_tra_du_kien: Due date (date object or string)
+            
+        Returns:
+            str: Display status ("Chưa trả", "Đã trả", or "Quá hạn")
+        """
+        if trang_thai == 1:
+            return "Đã trả"
+        elif trang_thai == 0:
+            # Parse date if it's a string
+            if isinstance(ngay_tra_du_kien, str):
+                ngay_tra_du_kien = datetime.strptime(ngay_tra_du_kien, '%Y-%m-%d').date()
+            
+            # Check if overdue
+            if ngay_tra_du_kien < date.today():
+                return "Quá hạn"
+            else:
+                return "Chưa trả"
+        return "Chưa trả"  # Default fallback
+    
     def load_muon_tra(self):
         # Hàm tải danh sách sách lên Treeview
-        from datetime import datetime, date
         self.cursor.execute("SELECT * FROM Muon_tra")
         rows = self.cursor.fetchall()
         # Chuyển trạng thái 0/1 thành "Chưa trả"/"Đã trả"/"Quá hạn"
         converted_rows = []
         for row in rows:
             row = list(row)
-            # Tính trạng thái
-            if row[-1] == 1:  # trang_thai = 1
-                row[-1] = "Đã trả"
-            elif row[-1] == 0:  # trang_thai = 0
-                # Kiểm tra quá hạn
-                ngay_tra_du_kien = row[5]  # Cột ngày_tra_du_kien
-                if isinstance(ngay_tra_du_kien, str):
-                    ngay_tra_du_kien = datetime.strptime(ngay_tra_du_kien, '%Y-%m-%d').date()
-                
-                if ngay_tra_du_kien < date.today():
-                    row[-1] = "Quá hạn"
-                else:
-                    row[-1] = "Chưa trả"
+            # Calculate status using helper method
+            row[-1] = self.calculate_status(row[-1], row[self.NGAY_TRA_DU_KIEN_COL])
             converted_rows.append(row)
         self.update_treeview(converted_rows)
 
@@ -128,7 +147,7 @@ class BorrowManagerScreen:
                 if key in ["Ngày mượn:", "Ngày trả:", "Ngày trả dự kiến:"]:
                     entry.set_date(values[i])
                 elif key == "Trạng thái:":
-                    trang_thai_value = values[6]
+                    trang_thai_value = values[self.TRANG_THAI_COL]
                     # Nếu là "Quá hạn", set về "Chưa trả" vì Combobox không có "Quá hạn"
                     if trang_thai_value == "Quá hạn":
                         entry.set("Chưa trả")
@@ -216,7 +235,6 @@ class BorrowManagerScreen:
             return
         # Truy vấn tìm kiếm với JOIN giữa Muon_tra và Doc_gia
         # Tìm kiếm theo tên đọc giả hoặc ngày mượn, 
-        from datetime import datetime, date
         query = """
             SELECT 
                 Muon_tra.ma_muon_tra,
@@ -236,19 +254,8 @@ class BorrowManagerScreen:
         converted_rows = []
         for row in rows:
             row = list(row)
-            # Tính trạng thái
-            if row[-1] == 1:  # trang_thai = 1
-                row[-1] = "Đã trả"
-            elif row[-1] == 0:  # trang_thai = 0
-                # Kiểm tra quá hạn
-                ngay_tra_du_kien = row[5]  # Cột ngày_tra_du_kien
-                if isinstance(ngay_tra_du_kien, str):
-                    ngay_tra_du_kien = datetime.strptime(ngay_tra_du_kien, '%Y-%m-%d').date()
-                
-                if ngay_tra_du_kien < date.today():
-                    row[-1] = "Quá hạn"
-                else:
-                    row[-1] = "Chưa trả"
+            # Calculate status using helper method
+            row[-1] = self.calculate_status(row[-1], row[self.NGAY_TRA_DU_KIEN_COL])
             converted_rows.append(row)
         self.update_treeview(converted_rows)
 
