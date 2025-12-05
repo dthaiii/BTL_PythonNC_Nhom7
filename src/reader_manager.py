@@ -162,6 +162,10 @@ class ReaderManagerScreen:
             messagebox.showerror("Lỗi", f"Sửa đọc giả thất bại: {e}")
 
     def xoa_doc_gia(self):
+        selected_item = self.tree.focus()
+        if not selected_item:
+            messagebox.showerror("Lỗi", "Vui lòng chọn đọc giả cần xóa.")
+            return
         ma_doc_gia = int(self.entries["Mã đọc giả:"].get())
         confirm = messagebox.askyesno("Xác nhận", f"Bạn có chắc chắn muốn xóa đọc giả có mã {ma_doc_gia}?")
         if confirm:
