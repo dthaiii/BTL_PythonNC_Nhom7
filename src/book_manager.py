@@ -131,12 +131,11 @@ class BookManagerScreen:
             selected_item = self.tree.focus()
             old_values = self.tree.item(selected_item, 'values')
             if not old_values:
-                messagebox.showerror("Lỗi", "Vui lòng chọn sách cần sửa.")
+                messagebox.showwarning("Lỗi", "Vui lòng chọn sách cần sửa.")
                 return
             
             old_ma_sach = int(old_values[0])
             new_ma_sach = int(self.entries["Mã Sách:"].get())
-            ma_sach = (self.entries["Mã Sách:"].get())
             ten_sach = self.entries["Tên Sách:"].get()
             tac_gia = self.entries["Tác Giả:"].get()
             the_loai = self.entries["Thể Loại:"].get()
@@ -161,20 +160,27 @@ class BookManagerScreen:
             messagebox.showerror("Lỗi", f"Mã sách không tồn tại!")
 
     def xoa_sach(self):  # xóa sách theo mã
-        ma_sach = (self.entries["Mã Sách:"].get())
-        answer = messagebox.askyesno("Xác nhận", f"Bạn có chắc chắn muốn xóa sách với mã {ma_sach}?")
-        if not answer:
-            return
-        self.cursor.execute("DELETE FROM Sach WHERE ma_sach = %s", (ma_sach,))
-        self.conn.commit()
-        self.load_sach()
-        # Xóa dữ liệu trên các entry
-        for key, entry in self.entries.items():
-            if key == "Ngày Xuất Bản:":
-                entry.set_date("")
-            else:
-                entry.delete(0, "end")
-        messagebox.showinfo("Thành công", "Xóa sách thành công.")
+        try:
+            selected_item = self.tree.selection()
+            if not selected_item:
+                messagebox.showwarning("Lỗi", "Vui lòng chọn sách cần xóa.")
+                return
+            ma_sach = (self.entries["Mã Sách:"].get())
+            answer = messagebox.askyesno("Xác nhận", f"Bạn có chắc chắn muốn xóa sách với mã {ma_sach}?")
+            if not answer:
+                return
+            self.cursor.execute("DELETE FROM Sach WHERE ma_sach = %s", (ma_sach,))
+            self.conn.commit()
+            self.load_sach()
+            # Xóa dữ liệu trên các entry
+            for key, entry in self.entries.items():
+                if key == "Ngày Xuất Bản:":
+                    entry.set_date("")
+                else:
+                    entry.delete(0, "end")
+            messagebox.showinfo("Thành công", "Xóa sách thành công.")
+        except mysql.connector.IntegrityError:
+            messagebox.showerror("Lỗi", f"Không thể xóa sách với mã {ma_sach} vì đang có độc giả mượn!")
 
     def tim_kiem(self):
         # Tìm kiếm sách theo tên hoặc thể loại
