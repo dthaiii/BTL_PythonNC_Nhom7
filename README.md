@@ -3,10 +3,6 @@
 
 # Ứng dụng Quản lý Thư viện
 
-<a href="https://github.com/HaUI-AnodisO/Control-Vaccination-Services/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=">Bug Report ⚠️</a>
-<a href="https://github.com/HaUI-AnodisO/Control-Vaccination-Services/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=">Request Feature 👩‍💻</a>
-
-## 🔎 Danh Mục
 
 1. [Chức Năng Chính](#chức-năng-chính)
 2. [Tổng Quan Hệ Thống](#-tổng-quan-hệ-thống)
@@ -16,8 +12,6 @@
     - [📋 Yêu Cầu - Prerequisites](#yêu-cầu-📋)
     - [🔨 Cài Đặt](#🔨-cài-đặt)
 6. [CI/CD](#cicd)
-7. [🙌 Đóng Góp](#-đóng-góp-cho-dự-án)
-8. [📝 License](#-license)
 
 
 ## Chức Năng 
@@ -76,11 +70,6 @@ Mô hình hệ thống bao gồm các công nghệ:
  
 ```
 
-## Thiết kế Database
-![alt text](/docs/database.png)
-
----
-
 ## Hướng Dẫn Cài Đặt
 
 ### Yêu Cầu 📋
@@ -94,7 +83,7 @@ Trước khi cài đặt, bạn cần cài đặt các công cụ sau:
 ### chạy local
 Bước 1: clone dự án về máy của bạn:
 ```bash
-git clone https://github.com/ngotruongcong/Python_NC_7.git
+git https://github.com/dthaiii/BTL_PythonNC_Nhom7
 cd Python_NC_7
 ```
 Bước 2: Tạo môi trường ảo
