@@ -47,6 +47,14 @@ class BorrowManagerScreen:
             ttk.Label(self.frame_inputs, text=label, background=self.label_bg_color, font=self.label_font).grid(row=i, column=0, padx=10, pady=5, sticky="w")
             if label in ["Ngày mượn:", "Ngày trả:", "Ngày trả dự kiến:"]:
                 entry = DateEntry(self.frame_inputs, width=18, background="darkblue", foreground="white", date_pattern='yyyy-mm-dd')
+            elif label == "Trạng thái:":
+                entry = ttk.Combobox(
+                    self.frame_inputs,
+                    values=["Chưa trả", "Đã trả"],  # Chỉ 2 lựa chọn
+                    state="readonly",
+                    width=16
+                )
+                entry.set("Chưa trả")
             else:
                 entry = ttk.Entry(self.frame_inputs)
             entry.grid(row=i, column=1, padx=10, pady=5)
@@ -75,16 +83,26 @@ class BorrowManagerScreen:
         self.tree.bind('<<TreeviewSelect>>', self.chon_item)
     def load_muon_tra(self):
         # Hàm tải danh sách sách lên Treeview
+        from datetime import datetime, date
         self.cursor.execute("SELECT * FROM Muon_tra")
         rows = self.cursor.fetchall()
-        # Chuyển trạng thái 0/1 thành "Chưa trả"/"Đã trả"
+        # Chuyển trạng thái 0/1 thành "Chưa trả"/"Đã trả"/"Quá hạn"
         converted_rows = []
         for row in rows:
             row = list(row)
-            if row[-1] == 0:
-                row[-1] = "Chưa trả"
-            elif row[-1] == 1:
+            # Tính trạng thái
+            if row[-1] == 1:  # trang_thai = 1
                 row[-1] = "Đã trả"
+            elif row[-1] == 0:  # trang_thai = 0
+                # Kiểm tra quá hạn
+                ngay_tra_du_kien = row[5]  # Cột ngày_tra_du_kien
+                if isinstance(ngay_tra_du_kien, str):
+                    ngay_tra_du_kien = datetime.strptime(ngay_tra_du_kien, '%Y-%m-%d').date()
+                
+                if ngay_tra_du_kien < date.today():
+                    row[-1] = "Quá hạn"
+                else:
+                    row[-1] = "Chưa trả"
             converted_rows.append(row)
         self.update_treeview(converted_rows)
 
@@ -92,7 +110,12 @@ class BorrowManagerScreen:
         # Cập nhật Treeview
         self.tree.delete(*self.tree.get_children())
         for row in rows:
-            self.tree.insert('', "end", values=row)
+            tags = ()
+            if row[-1] == "Quá hạn":
+                tags = ('overdue',)
+            self.tree.insert('', "end", values=row, tags=tags)
+        
+        self.tree.tag_configure('overdue', background='#ffcccc')
             
     def chon_item(self, event):
         selected_item = self.tree.focus()
@@ -101,11 +124,19 @@ class BorrowManagerScreen:
             for i, key in enumerate(self.entries.keys()):
                 if key == "Tìm kiếm:":  # Bỏ qua ô Tìm Kiếm
                     continue
-                self.entries[key].delete(0, "end")
+                entry = self.entries[key]
                 if key in ["Ngày mượn:", "Ngày trả:", "Ngày trả dự kiến:"]:
-                    self.entries[key].set_date(values[i])
+                    entry.set_date(values[i])
+                elif key == "Trạng thái:":
+                    trang_thai_value = values[6]
+                    # Nếu là "Quá hạn", set về "Chưa trả" vì Combobox không có "Quá hạn"
+                    if trang_thai_value == "Quá hạn":
+                        entry.set("Chưa trả")
+                    else:
+                        entry.set(trang_thai_value)
                 else:
-                    self.entries[key].insert(0, values[i])
+                    entry.delete(0, "end")
+                    entry.insert(0, values[i])
 
     def them_muon_tra(self):
         try:
@@ -117,9 +148,12 @@ class BorrowManagerScreen:
             ngay_tra = self.entries["Ngày trả:"].get()  # Có thể rỗng nếu chưa trả
             ngay_tra = self.entries["Ngày trả:"].get_date() if ngay_tra else None
             ngay_tra_du_kien = self.entries["Ngày trả dự kiến:"].get_date()
-            # Lấy trạng thái từ ô nhập, mặc định là 0 nếu rỗng
+            # Lấy trạng thái từ ô nhập, chuyển đổi "Chưa trả"/"Đã trả" thành 0/1
             trang_thai_str = self.entries["Trạng thái:"].get()
-            trang_thai = int(trang_thai_str) if trang_thai_str in ["0", "1"] else 0
+            if trang_thai_str == "Đã trả":
+                trang_thai = 1
+            else:  # "Chưa trả" hoặc mặc định
+                trang_thai = 0
 
             # Kiểm tra dữ liệu bắt buộc
             if not ma_sach or not ma_doc_gia or not ngay_muon or not ngay_tra_du_kien:
@@ -148,7 +182,12 @@ class BorrowManagerScreen:
         ngay_muon = self.entries["Ngày mượn:"].get_date()  # Ngày mượn
         ngay_tra = self.entries["Ngày trả:"].get_date() if self.entries["Ngày trả:"].get() else None  # Ngày trả
         ngay_tra_du_kien = self.entries["Ngày trả dự kiến:"].get_date()  # Ngày trả dự kiến
-        trang_thai = int(self.entries["Trạng thái:"].get())  # Trạng thái: 0 - chưa trả, 1 - đã trả
+        # Chuyển đổi trạng thái từ "Chưa trả"/"Đã trả" thành 0/1
+        trang_thai_str = self.entries["Trạng thái:"].get()
+        if trang_thai_str == "Đã trả":
+            trang_thai = 1
+        else:  # "Chưa trả" hoặc mặc định
+            trang_thai = 0
 
         # Kiểm tra dữ liệu bắt buộc
         if not ma_sach or not ma_doc_gia or not ngay_muon or not ngay_tra_du_kien:
@@ -177,6 +216,7 @@ class BorrowManagerScreen:
             return
         # Truy vấn tìm kiếm với JOIN giữa Muon_tra và Doc_gia
         # Tìm kiếm theo tên đọc giả hoặc ngày mượn, 
+        from datetime import datetime, date
         query = """
             SELECT 
                 Muon_tra.ma_muon_tra,
@@ -196,10 +236,19 @@ class BorrowManagerScreen:
         converted_rows = []
         for row in rows:
             row = list(row)
-            if row[-1] == 0:
-                row[-1] = "Chưa trả"
-            else:
+            # Tính trạng thái
+            if row[-1] == 1:  # trang_thai = 1
                 row[-1] = "Đã trả"
+            elif row[-1] == 0:  # trang_thai = 0
+                # Kiểm tra quá hạn
+                ngay_tra_du_kien = row[5]  # Cột ngày_tra_du_kien
+                if isinstance(ngay_tra_du_kien, str):
+                    ngay_tra_du_kien = datetime.strptime(ngay_tra_du_kien, '%Y-%m-%d').date()
+                
+                if ngay_tra_du_kien < date.today():
+                    row[-1] = "Quá hạn"
+                else:
+                    row[-1] = "Chưa trả"
             converted_rows.append(row)
         self.update_treeview(converted_rows)
 
