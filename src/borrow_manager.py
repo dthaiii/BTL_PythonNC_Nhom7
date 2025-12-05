@@ -101,14 +101,18 @@ class BorrowManagerScreen:
         if trang_thai == 1:
             return "Đã trả"
         elif trang_thai == 0:
-            # Parse date if it's a string
-            if isinstance(ngay_tra_du_kien, str):
-                ngay_tra_du_kien = datetime.strptime(ngay_tra_du_kien, '%Y-%m-%d').date()
-            
-            # Check if overdue
-            if ngay_tra_du_kien < date.today():
-                return "Quá hạn"
-            else:
+            try:
+                # Parse date if it's a string
+                if isinstance(ngay_tra_du_kien, str):
+                    ngay_tra_du_kien = datetime.strptime(ngay_tra_du_kien, '%Y-%m-%d').date()
+                
+                # Check if overdue
+                if ngay_tra_du_kien < date.today():
+                    return "Quá hạn"
+                else:
+                    return "Chưa trả"
+            except (ValueError, AttributeError):
+                # If date parsing fails, default to "Chưa trả"
                 return "Chưa trả"
         return "Chưa trả"  # Default fallback
     
