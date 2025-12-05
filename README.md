@@ -116,7 +116,7 @@ Thông tin cơ bản để kết nối MySQL:
 MYSQL_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'dong10082003',  # Thay đổi mật khẩu của bạn nếu cần
+    'password': '123456',  # Thay đổi mật khẩu của bạn nếu cần
     'database': 'library_management',
     'port': '3306'    
 }
@@ -127,16 +127,5 @@ Sau khi đã cài đặt xong tất cả phụ thuộc và cấu hình cơ sở 
 ```bash
 python main.py
 ```
----
-## 🙌 Đóng góp cho dự án
-
-<a href="https://github.com/Anodis108/HAUI-HITAnodisO/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=">Bug Report ⚠️
-</a>
-
-<a href="https://github.com/Anodis108/HAUI-HITAnodisO/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=">Feature Request 👩‍💻</a>
-
-Nếu bạn muốn đóng góp cho dự án, hãy đọc [CONTRIBUTING.md](.github/CONTRIBUTING.md) để biết thêm chi tiết.
-
-Mọi đóng góp của các bạn đều được trân trọng, đừng ngần ngại gửi pull request cho dự án.
 
 
