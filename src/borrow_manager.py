@@ -57,7 +57,7 @@ class BorrowManagerScreen:
                     self.frame_inputs,
                     values=["Chưa trả", "Đã trả"],  # Chỉ 2 lựa chọn
                     state="readonly",
-                    width=16
+                    width=18
                 )
                 entry.set("Chưa trả")
             else:
